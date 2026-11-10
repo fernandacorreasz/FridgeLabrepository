@@ -1,0 +1,18 @@
+import { useEffect, useState } from 'react';
+type Fridge = { id: number; name: string; temperatureC: number; mode: string; note: string };
+type State = { devices: Record<string,{temperatureC:number;mode:string;status:string}> };
+export default function App() {
+  const [devices,setDevices]=useState<Fridge[]>([]),[firmware,setFirmware]=useState<State>({devices:{}}),[selected,setSelected]=useState(1),[temp,setTemp]=useState('4'),[mode,setMode]=useState('ECO'),[note,setNote]=useState(''),[search,setSearch]=useState(''),[message,setMessage]=useState('');
+  async function refresh(q='') {
+    const [list, fw]=await Promise.all([fetch('/api/devices?name='+encodeURIComponent(q), {headers: {'Authorization': 'Basic ' + btoa('teacher:laboratorio-teacher')}}),fetch('/api/firmware/state', {headers: {'Authorization': 'Basic ' + btoa('teacher:laboratorio-teacher')}})]);
+    const data=await list.json(); setDevices(Array.isArray(data)?data:[]);
+    if(fw.ok) setFirmware(await fw.json());
+  }
+  useEffect(()=>{void refresh();},[]);
+  function choose(f:Fridge){setSelected(f.id);setTemp(String(f.temperatureC));setMode(f.mode);setNote(f.note);setMessage('');}
+  async function submit(e:React.FormEvent){e.preventDefault();setMessage('Enviando ao simulador...');
+    const r=await fetch(`/api/devices/${selected}/configuration`,{method:'PUT',headers:{'Content-Type':'application/json','Authorization':'Basic '+btoa('teacher:laboratorio-teacher')},body:JSON.stringify({temperatureC:Number(temp),mode,note})});
+    const payload=await r.json(); setMessage(r.ok?'Configuração aplicada no simulador.':payload.error||'Falha na operação'); if(r.ok) await refresh(search);
+  }
+  return <div className="shell"><aside><div className="brand">FRIDGE<span>LAB</span></div><small>CONFIGURAÇÃO DE DISPOSITIVOS</small><nav><a href="#devices">Dispositivos</a><a href="#config">Configuração</a><a href="#firmware">Firmware simulado</a></nav><p>Ambiente didático, sem geladeiras reais.</p></aside><main><header><span className="eyebrow">PAINEL DE CONTROLE</span><h1>Geladeiras inteligentes</h1><p>Configure parâmetros e acompanhe o simulador do firmware.</p></header><section id="devices"><div className="row"><h2>Dispositivos cadastrados</h2><form onSubmit={e=>{e.preventDefault();void refresh(search)}}><input placeholder="Buscar dispositivo" value={search} onChange={e=>setSearch(e.target.value)}/><button>Buscar</button></form></div><div className="cards">{devices.map(d=><button className={'device '+(d.id===selected?'selected':'')} key={d.id} onClick={()=>choose(d)}><span>DISPOSITIVO {d.id}</span><b>{d.name}</b><strong>{d.temperatureC} °C</strong><small>{d.mode}</small></button>)}</div></section><div className="grid"><section id="config" className="panel"><h2>Configurar dispositivo #{selected}</h2><form onSubmit={submit} className="form"><label>Temperatura (°C)<input type="number" min="-20" max="15" value={temp} onChange={e=>setTemp(e.target.value)}/></label><label>Modo<select value={mode} onChange={e=>setMode(e.target.value)}><option>ECO</option><option>NORMAL</option><option>TURBO</option></select></label><label>Nota para o dispositivo<textarea value={note} onChange={e=>setNote(e.target.value)}/></label><button>Enviar configuração</button><p role="status">{message}</p></form></section><section id="firmware" className="panel"><h2>Estado no firmware</h2>{devices.map(d=><div className="status" key={d.id}><div><b>{d.name}</b><small>Temperatura: {firmware.devices[String(d.id)]?.temperatureC ?? '–'} °C · {firmware.devices[String(d.id)]?.mode ?? 'Aguardando'}</small><div className="note">{d.note}</div></div><span className="indicator">{firmware.devices[String(d.id)]?.status??'Pendente'}</span></div>)}</section></div></main></div>;
+}
