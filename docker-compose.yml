@@ -1,0 +1,39 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: geladeira_lab
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: laboratorio_postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d geladeira_lab"]
+      interval: 3s
+      retries: 20
+    volumes:
+      - fridge_db:/var/lib/postgresql/data
+  firmware:
+    build: ./firmware
+    expose: ["8081"]
+  backend:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/geladeira_lab
+      DB_USER: fridge_app
+      DB_PASSWORD: training-only
+      MIGRATION_USER: postgres
+      MIGRATION_PASSWORD: laboratorio_postgres
+      FIRMWARE_URL: http://firmware:8081
+    ports:
+      - "127.0.0.1:8082:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      firmware:
+        condition: service_started
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:3002:80"
+    depends_on: [backend]
+volumes:
+  fridge_db:
