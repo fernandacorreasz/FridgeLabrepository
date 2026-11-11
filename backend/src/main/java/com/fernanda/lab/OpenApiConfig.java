@@ -9,7 +9,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
-  @Bean OpenAPI fridgeOpenAPI() {
+  @Bean
+  OpenAPI fridgeOpenAPI() {
     return new OpenAPI().info(new Info().title("Fridge Lab API").version("1.0.0")
         .description("API didática para dispositivos fictícios; use somente em laboratório local."))
         .servers(java.util.List.of(new Server().url("/")))
