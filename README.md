@@ -2,6 +2,8 @@
 
 Aplicação para configurar geladeiras simuladas com Spring Boot, PostgreSQL, Flyway, React e um firmware em contêiner separado. 
 
+Teste educacional
+
 ## Execução local
 
 ```bash
