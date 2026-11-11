@@ -1,8 +1,9 @@
 # Fridge Lab — revisão de segurança
 
-Aplicação para configurar geladeiras simuladas com Spring Boot, PostgreSQL, Flyway, React e um firmware em contêiner separado. 
-
+Essa aplicação é um sistema  para configurar geladeiras, desenvolvido de forma didática para praticas de segurança.
 Teste educacional
+
+Tecnologias usadas: Spring Boot, PostgreSQL, Flyway, React e um firmware em contêiner separado. 
 
 ## Execução local
 
